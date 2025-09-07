@@ -94,14 +94,16 @@ class WordPressApiClient {
   private sharedSecret: string;
 
   constructor() {
-    this.baseUrl = process.env.WP_API_BASE || 'http://localhost:8080/pken-dev_vote';
-    this.sharedSecret = process.env.CUR_SHARED_SECRET || '';
+  this.baseUrl = process.env.NEXT_PUBLIC_WP_API_BASE || 'http://localhost:8080/pken-dev_vote';
+  this.sharedSecret = process.env.CUR_SHARED_SECRET || process.env.NEXT_PUBLIC_CUR_SHARED_SECRET || '';
   }
 
   // 署名生成
   private generateSignature(data: any): string {
-    const rawBody = JSON.stringify(data);
-    return CryptoJS.HmacSHA256(rawBody, this.sharedSecret).toString();
+  const rawBody = JSON.stringify(data);
+  console.log('[DEBUG] generateSignature sharedSecret:', this.sharedSecret);
+  console.log('[DEBUG] generateSignature rawBody:', rawBody);
+  return CryptoJS.HmacSHA256(rawBody, this.sharedSecret).toString();
   }
 
   // 共通のリクエスト処理
@@ -180,3 +182,8 @@ export const wpApi = new WordPressApiClient();
 
 // エクスポート
 export { WordPressApiClient };
+
+console.log('[DEBUG] process.cwd():', process.cwd());
+console.log('[DEBUG] __dirname:', __dirname);
+console.log('[DEBUG] process.env.CUR_SHARED_SECRET:', process.env.CUR_SHARED_SECRET);
+console.log('[DEBUG] process.env.NEXT_PUBLIC_CUR_SHARED_SECRET:', process.env.NEXT_PUBLIC_CUR_SHARED_SECRET);

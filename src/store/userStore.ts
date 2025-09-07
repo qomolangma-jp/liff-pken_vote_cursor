@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { User, api, ApiError } from '@/lib/api';
+import { getErrorMessage } from '@/lib/errorHandler';
 
 interface UserState {
   user: User | null;
@@ -46,22 +47,27 @@ export const useUserStore = create<UserStore>()(
 
         try {
           const user = await api.getMe(lineId);
-          set({ 
-            user: user.id !== 0 ? user : { ...user, id: 0 }, 
-            loading: false, 
-            initialized: true 
-          });
-        } catch (error) {
-          const errorMessage = error instanceof ApiError 
-            ? error.message 
-            : 'ユーザー情報の取得に失敗しました';
-          
-          set({ 
-            error: errorMessage, 
-            loading: false, 
-            initialized: true,
-            user: { id: 0, line_id: lineId }
-          });
+          //console.log('fetchUser: APIレスポンス', user);
+
+          if (!user || typeof user !== 'object') {
+            set({ user: null, error: 'ユーザー情報が取得できませんでした' });
+            //console.log('fetchUser: set後user(null)', get().user);
+            return;
+          }
+
+          const userId = Number(user.id);
+          if (userId && userId !== 0) {
+            set({ user: { ...user, id: userId }, error: null });
+            //console.log('fetchUser: set後user', get().user);
+          } else {
+            set({ user: null, error: null });
+            //console.log('fetchUser: set後user(null)', get().user);
+          }
+        } catch (e) {
+          set({ user: null, error: getErrorMessage(e) });
+          console.log('fetchUser: エラー', e);
+        } finally {
+          set({ loading: false, initialized: true });
         }
       },
 

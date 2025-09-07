@@ -40,7 +40,7 @@ export const api = {
       const response = await apiClient.post<ApiResponse<User>>('/api/wp/me', {
         line_id: lineId,
       });
-      return response.data.data;
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -62,7 +62,7 @@ export const api = {
       const response = await apiClient.get<ApiResponse<SurveyDetail>>(
         `/api/wp/survey-detail?user_id=${userId}&survey_id=${surveyId}`
       );
-      return response.data.data;
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }
@@ -74,7 +74,7 @@ export const api = {
       const response = await apiClient.get<ApiResponse<SurveyHistoryItem[]>>(
         `/api/wp/survey-history?user_id=${userId}`
       );
-      return response.data.data;
+      return response.data;
     } catch (error) {
       throw handleApiError(error);
     }

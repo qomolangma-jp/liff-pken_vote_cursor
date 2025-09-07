@@ -29,14 +29,14 @@ export const useLiff = () => {
   useEffect(() => {
     const initializeLiff = async () => {
       const enabled = process.env.NEXT_PUBLIC_LIFF_ENABLED !== 'false';
-      
+      console.log('LIFF_ENABLED:', enabled);
       if (!enabled) {
         // ローカル開発モード
         setState({
           ready: true,
           mock: true,
           profile: {
-            userId: 'local-000',
+            userId: 'Ua08801bcbe21d7c2985ed58d24006472XXX',
             displayName: 'Local User',
             pictureUrl: undefined,
             statusMessage: undefined,
@@ -47,13 +47,13 @@ export const useLiff = () => {
 
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-        if (!liffId || liffId === 'your-liff-id-here') {
+        if (!liffId || liffId === 'eee') {
           console.warn('LIFF IDが設定されていません。モックモードで動作します。');
           setState({
             ready: true,
             mock: true,
             profile: {
-              userId: 'mock-user-002',
+              userId: 'Ua08801bcbe21d7c2985ed58d24006472',
               displayName: 'Mock User (No LIFF ID)',
               pictureUrl: undefined,
               statusMessage: undefined,

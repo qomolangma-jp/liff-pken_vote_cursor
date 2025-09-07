@@ -66,6 +66,7 @@ const Page: React.FC = memo(() => {
       </main>
     );
   }
+  //console.log('LIFF ready. profile:', profile, 'user:', user, 'mock:', mock);
 
   // ログイン済みユーザーの場合
   if (user && user.id !== 0) {
