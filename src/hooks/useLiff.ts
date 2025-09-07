@@ -28,7 +28,9 @@ export const useLiff = () => {
 
   useEffect(() => {
     const initializeLiff = async () => {
-      const enabled = process.env.NEXT_PUBLIC_LIFF_ENABLED !== 'false';
+      // NEXT_PUBLIC_LIFF_DISABLEDが"true"ならLIFF無効、それ以外・未定義なら有効
+      const disabled = process.env.NEXT_PUBLIC_LIFF_DISABLED === 'true';
+      const enabled = !disabled;
       console.log('LIFF_ENABLED:', enabled);
       if (!enabled) {
         // ローカル開発モード
