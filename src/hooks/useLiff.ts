@@ -47,22 +47,63 @@ export const useLiff = () => {
 
       try {
         const liffId = process.env.NEXT_PUBLIC_LIFF_ID;
-        if (!liffId) {
-          throw new Error('LIFF IDが設定されていません');
+        if (!liffId || liffId === 'your-liff-id-here') {
+          console.warn('LIFF IDが設定されていません。モックモードで動作します。');
+          setState({
+            ready: true,
+            mock: true,
+            profile: {
+              userId: 'mock-user-002',
+              displayName: 'Mock User (No LIFF ID)',
+              pictureUrl: undefined,
+              statusMessage: undefined,
+            },
+          });
+          return;
+        }
+
+        // LIFF SDKの読み込みを待つ
+        let retryCount = 0;
+        const maxRetries = 20; // リトライ回数を増やす
+        
+        while (retryCount < maxRetries) {
+          if (typeof window !== "undefined" && isLiffAvailable(window)) {
+            break;
+          }
+          
+          // 200ms待ってから再試行
+          await new Promise(resolve => setTimeout(resolve, 200));
+          retryCount++;
         }
 
         if (typeof window !== "undefined" && isLiffAvailable(window)) {
-          await window.liff.init({ liffId });
-          
-          if (!window.liff.isLoggedIn()) {
-            await window.liff.login({ redirectUri: window.location.href });
-            return;
+          try {
+            await window.liff.init({ liffId });
+            
+            if (!window.liff.isLoggedIn()) {
+              await window.liff.login({ redirectUri: window.location.href });
+              return;
+            }
+            
+            const profile = await window.liff.getProfile();
+            setState({ ready: true, profile });
+          } catch (liffError) {
+            console.error('LIFF init/login error:', liffError);
+            throw new Error(`LIFF初期化エラー: ${liffError instanceof Error ? liffError.message : '不明なエラー'}`);
           }
-          
-          const profile = await window.liff.getProfile();
-          setState({ ready: true, profile });
         } else {
-          throw new Error('LIFF SDKが利用できません');
+          // フォールバック: モックモードで動作
+          console.warn('LIFF SDKが利用できません。モックモードで動作します。');
+          setState({
+            ready: true,
+            mock: true,
+            profile: {
+              userId: 'mock-user-001',
+              displayName: 'Mock User',
+              pictureUrl: undefined,
+              statusMessage: undefined,
+            },
+          });
         }
       } catch (error) {
         console.error('LIFF initialization error:', error);
