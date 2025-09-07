@@ -187,3 +187,5 @@ console.log('[DEBUG] process.cwd():', process.cwd());
 console.log('[DEBUG] __dirname:', __dirname);
 console.log('[DEBUG] process.env.CUR_SHARED_SECRET:', process.env.CUR_SHARED_SECRET);
 console.log('[DEBUG] process.env.NEXT_PUBLIC_CUR_SHARED_SECRET:', process.env.NEXT_PUBLIC_CUR_SHARED_SECRET);
+console.log('[DEBUG] process.env.NEXT_PUBLIC_WP_API_BASE:', process.env.NEXT_PUBLIC_WP_API_BASE);
+console.log('[DEBUG] wpApi baseUrl:', wpApi); 
