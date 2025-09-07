@@ -32,8 +32,10 @@ export const useLiff = () => {
       const disabled = process.env.NEXT_PUBLIC_LIFF_DISABLED === 'true';
       const enabled = !disabled;
       console.log('LIFF_ENABLED:', enabled);
-      if (!enabled) {
+      if (!enabled){
         // ローカル開発モード
+        console.log('ローカルモードで動作します。');
+
         setState({
           ready: true,
           mock: true,

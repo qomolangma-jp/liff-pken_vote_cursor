@@ -5,6 +5,7 @@ import { Select } from '@/components/ui/Select';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useUserStore } from '@/store/userStore';
 import { api, RegisterRequest, getErrorMessage } from '@/lib/api';
+import { useLiff } from '@/hooks/useLiff';
 import styles from './UserRegistrationForm.module.css';
 
 interface FormData {
@@ -28,14 +29,15 @@ const classes = Array.from({ length: 9 }, (_, i) => ({
   value: i + 1 
 }));
 
-interface UserRegistrationFormProps {
+export interface UserRegistrationFormProps {
   onSuccess?: () => void;
+  lineId?: string;
 }
 
-export const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({ 
-  onSuccess 
-}) => {
+export const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({ onSuccess, lineId }) => {
   const { user, fetchUser } = useUserStore();
+  const { profile } = useLiff();
+  lineId = profile?.userId;
   const [form, setForm] = useState<FormData>({
     grade: '',
     class: '',
@@ -63,7 +65,7 @@ export const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({
         ...form,
         grade: Number(form.grade),
         class: Number(form.class),
-        line_id: user?.line_id || ''
+        line_id: lineId || user?.line_id || ''
       };
 
       await api.register(registerData);
@@ -79,9 +81,9 @@ export const UserRegistrationForm: React.FC<UserRegistrationFormProps> = ({
     <form className={styles.form} onSubmit={handleSubmit}>
       <h2 className={styles.title}>ユーザー登録</h2>
       
-      {user?.line_id && (
+      {lineId && (
         <div className={styles.lineId}>
-          LINE ID: {user.line_id}
+          LINE ID: {lineId}
         </div>
       )}
 
