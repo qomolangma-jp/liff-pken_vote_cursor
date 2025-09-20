@@ -1,8 +1,8 @@
-import axios, { AxiosError, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 import CryptoJS from 'crypto-js';
 
 // 型定義
-export interface ApiResponse<T = any> {
+export interface ApiResponse<T = unknown> {
   data: T;
   status: number;
   message?: string;
@@ -54,23 +54,79 @@ export interface SurveyReply {
 }
 
 export interface SurveyDetail {
-  group?: {
-    fm_title: string;
-    fm_text: string;
-  } | null;
-  date?: string;
-  form?: SurveyForm[];
-  post?: {
-    ID: number;
+  ok: boolean;
+  post: {
+    id: number;
+    title: string;
+    content: string;
+    date: string;
+    post_status: string;
+    post_author: number;
+    group: {
+      fm_title: string;
+      fm_text: string;
+      fm_close: string;
+    };
+    form: SurveyForm[];
   };
-  content?: string;
-  my_reply?: SurveyReply;
+  my_reply: {
+    fm_re_id: number | null;
+    user_id: number;
+    reply_status: string | null;
+    answer: string | null;
+    form_data: object | null;
+    history: string | null;
+    line_date: string | null;
+    reply_created: string | null;
+    reply_updated: string | null;
+  };
+}
+
+// WordPressのAPIレスポンス構造に合わせた型定義
+export interface WordPressSurveyResponse {
+  ok: boolean;
+  count: number;
+  data: WordPressSurveyItem[];
+}
+
+export interface WordPressSurveyItem {
+  id: number;
+  title: string;
+  date: string;
+  post_status: string;
+  reply: {
+    fm_re_id: number | null;
+    user_id: number;
+    reply_status: string | null; // 'answered' | 'unanswered' | null
+    answer: string | null;
+    form_data: object | null;
+    history: string | null;
+    line_date: string | null;
+    reply_created: string | null;
+    reply_updated: string | null;
+  };
 }
 
 export interface SurveyHistoryItem {
   id: number;
   title: string;
   date: string;
+  // フロントエンド用の統一されたフィールド
+  status?: string; // reply.reply_statusから取得
+  replyDate?: string; // reply.reply_updatedまたはreply.reply_createdから取得
+  // WordPressの生データも保持
+  post_status?: string;
+  reply?: WordPressSurveyItem['reply'];
+  // 下位互換性のための追加フィールド
+  fm_re_id?: number;
+  user_id?: number;
+  post_id?: number;
+  answer?: string;
+  str?: string;
+  history?: string;
+  line_date?: string;
+  created?: string;
+  updated?: string;
 }
 
 // LIFF関連の型定義
@@ -99,7 +155,7 @@ class WordPressApiClient {
   }
 
   // 署名生成
-  private generateSignature(data: any): string {
+  private generateSignature(data: Record<string, unknown> | RegisterRequest): string {
   const rawBody = JSON.stringify(data);
   console.log('[DEBUG] generateSignature sharedSecret:', this.sharedSecret);
   console.log('[DEBUG] generateSignature rawBody:', rawBody);
@@ -110,12 +166,17 @@ class WordPressApiClient {
   private async request<T>(
     endpoint: string,
     method: 'GET' | 'POST' = 'GET',
-    data?: any,
+    data?: Record<string, unknown> | RegisterRequest,
     requiresSignature: boolean = false
   ): Promise<T> {
     const url = `${this.baseUrl}/wp-json/custom/v1${endpoint}`;
     
-    const config: any = {
+    const config: {
+      method: string;
+      url: string;
+      headers: Record<string, string>;
+      data?: Record<string, unknown> | RegisterRequest;
+    } = {
       method,
       url,
       headers: {
@@ -165,13 +226,49 @@ class WordPressApiClient {
 
   // アンケート履歴取得
   async getSurveyHistory(userId: number): Promise<SurveyHistoryItem[]> {
-    return this.request<SurveyHistoryItem[]>(
+    const response = await this.request<WordPressSurveyResponse>(
       `/survey_history?user_id=${userId}`
     );
+    
+    // デバッグ用: WordPressからの生レスポンスをログ出力
+    console.log('Raw WordPress Survey History Response:', JSON.stringify(response, null, 2));
+    
+    // WordPressのレスポンス構造をフロントエンド用の構造に変換
+    const mappedData = response.data.map(item => {
+      // 実際に回答データがあるかチェック
+      const hasActualAnswer = item.reply.fm_re_id && 
+        (item.reply.answer || item.reply.form_data || item.reply.reply_status === 'answered');
+      
+      console.log(`Survey ${item.id}: hasActualAnswer=${hasActualAnswer}, fm_re_id=${item.reply.fm_re_id}, reply_status=${item.reply.reply_status}, answer=${!!item.reply.answer}, form_data=${!!item.reply.form_data}`);
+      
+      return {
+        id: item.id,
+        title: item.title,
+        date: item.date,
+        status: item.reply.reply_status || 'unanswered', // reply_statusがnullの場合は未回答
+        post_status: item.post_status,
+        reply: item.reply,
+        // 回答日時を設定（実際に回答がある場合のみ）
+        replyDate: hasActualAnswer ? (item.reply.reply_updated || item.reply.reply_created || undefined) : undefined,
+        // 下位互換性のための追加フィールド
+        fm_re_id: item.reply.fm_re_id || undefined,
+        user_id: item.reply.user_id,
+        post_id: item.id,
+        answer: item.reply.answer || undefined,
+        str: item.reply.form_data ? JSON.stringify(item.reply.form_data) : undefined,
+        history: item.reply.history || undefined,
+        line_date: item.reply.line_date || undefined,
+        created: item.reply.reply_created || undefined,
+        updated: item.reply.reply_updated || undefined,
+      };
+    });
+    
+    console.log('Mapped data sample:', mappedData[0]);
+    return mappedData;
   }
 
   // アンケート回答送信
-  async submitSurveyReply(data: Record<string, any>): Promise<ApiResponse> {
+  async submitSurveyReply(data: Record<string, string | number>): Promise<ApiResponse> {
     return this.request<ApiResponse>('/survey_reply', 'POST', data, true);
   }
 

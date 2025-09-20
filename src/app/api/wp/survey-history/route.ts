@@ -14,6 +14,11 @@ export async function GET(request: NextRequest) {
     }
 
     const history = await wpApi.getSurveyHistory(Number(user_id));
+    
+    // デバッグ用: WordPressからの生レスポンスとマッピング後のデータをログ出力
+    console.log('Mapped Survey History Response:', JSON.stringify(history, null, 2));
+    console.log('History count:', history.length);
+    
     return NextResponse.json(history);
   } catch (error) {
     console.error('Survey History API Error:', error);

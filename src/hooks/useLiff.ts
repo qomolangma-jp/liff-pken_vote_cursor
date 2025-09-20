@@ -40,7 +40,7 @@ export const useLiff = () => {
           ready: true,
           mock: true,
           profile: {
-            userId: 'Ua08801bcbe21d7c2985ed58d24006472XXX',
+            userId: 'Uc58e187a6ffc603001d600d8b5031775',
             displayName: 'Local User',
             pictureUrl: undefined,
             statusMessage: undefined,
@@ -57,7 +57,7 @@ export const useLiff = () => {
             ready: true,
             mock: true,
             profile: {
-              userId: 'Ua08801bcbe21d7c2985ed58d24006472',
+              userId: 'Uc58e187a6ffc603001d600d8b5031775',
               displayName: 'Mock User (No LIFF ID)',
               pictureUrl: undefined,
               statusMessage: undefined,

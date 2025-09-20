@@ -46,7 +46,6 @@ const SurveyDetailContent: React.FC = memo(() => {
   return (
     <main className={styles.container}>
       <SurveyForm 
-        surveyId={id || ''} 
         onSuccess={() => alert('送信しました')}
       />
     </main>
