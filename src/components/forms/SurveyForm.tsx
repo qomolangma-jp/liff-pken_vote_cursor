@@ -184,6 +184,47 @@ export const SurveyForm: React.FC<SurveyFormProps> = ({
           </div>
         );
 
+      case 'checkbox':
+        const checkboxOptions = form.fm_value ? form.fm_value.split(',') : [];
+        const selectedValues = currentValue ? currentValue.split(',') : [];
+        
+        const handleCheckboxChange = (optionValue: string, isChecked: boolean) => {
+          let newValues: string[];
+          if (isChecked) {
+            // チェックされた場合、値を追加
+            newValues = [...selectedValues, optionValue].filter(Boolean);
+          } else {
+            // チェックが外された場合、値を削除
+            newValues = selectedValues.filter(val => val !== optionValue);
+          }
+          handleInputChange(formKey, newValues.join(','));
+        };
+
+        return (
+          <div key={formKey} className={styles.formGroup}>
+            <label className={styles.label}>{form.fm_label}</label>
+            <div className={styles.checkboxGroup}>
+              {checkboxOptions.map((option, optIdx) => {
+                const optionValue = option.trim();
+                const isChecked = selectedValues.includes(optionValue);
+                return (
+                  <label key={optIdx} className={styles.checkboxOption}>
+                    <input
+                      type="checkbox"
+                      name={`${formKey}_${optIdx}`}
+                      value={optionValue}
+                      checked={isChecked}
+                      onChange={(e) => handleCheckboxChange(optionValue, e.target.checked)}
+                      className={styles.checkboxInput}
+                    />
+                    <span className={styles.checkboxLabel}>{optionValue}</span>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        );
+
       case 'select':
         const selectOptions = form.fm_value ? form.fm_value.split(',').map(opt => ({
           label: opt.trim(),
